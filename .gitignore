@@ -1,0 +1,6 @@
+
+# Ignore all .geany files
+*.geany
+
+# Ignore all __pycache__ directories
+__pycache__
