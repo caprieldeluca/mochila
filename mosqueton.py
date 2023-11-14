@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import os
+from pathlib import PurePath
 import runpy
 import sys
+import traceback
 
 
-pkg_path = os.path.dirname(__file__)
+pkg_path = str(PurePath(__file__).parent)
 pkg_name = 'mochila'
 
 # Insert pkg_path at the front of sys.path
@@ -28,5 +29,5 @@ try:
         run_name=pkg_name)
 
 except Exception as e:
-    plog(type(e), e)
+    plog(*traceback.format_exception(e, limit=-1))
 

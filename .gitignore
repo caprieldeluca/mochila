@@ -4,3 +4,6 @@
 
 # Ignore all __pycache__ directories
 __pycache__
+
+# Ignore custom casco.py file
+casco.py
