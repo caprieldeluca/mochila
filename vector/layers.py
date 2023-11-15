@@ -8,11 +8,27 @@ from osgeo import ogr
 from qgis.analysis import QgsGeometrySnapper
 
 from qgis.core import (
+    QgsFeatureRequest,
     QgsFeatureSource,
     QgsProject,
     QgsVectorLayer)
+from qgis.utils import iface
 
 
+#=====
+# GET CURRENT LAYER
+#=====
+def get_current_layer():
+    """Get the current layer of the project."""
+
+    layer = iface.layerTreeView().currentLayer()
+
+    return layer
+
+
+#=====
+# GET LAYER FROM GPKG
+#=====
 def get_layer_from_gpkg(utf8_path, baseName):
     """Get a QgsVectorLayer from a GeoPackage file path and layer name"""
     layer = None
@@ -38,6 +54,10 @@ def get_layer_from_gpkg(utf8_path, baseName):
 
     return layer
 
+
+#=====
+# LOAD LAYER TO MAP
+#=====
 def load_layer_to_map(mapLayer):
     """Load a layer to the map"""
 
@@ -45,3 +65,32 @@ def load_layer_to_map(mapLayer):
         mapLayer)
 
     return mapLayer
+
+
+#=====
+# GET FEATURES COUNT
+#=====
+def get_features_count(layer):
+    """Get the features count of a layer"""
+
+    feats = layer.getFeatures(QgsFeatureRequest())
+    count = len(list(feats))
+
+    return count
+
+
+#=====
+# GET REF GEOM
+#=====
+def get_ref_geom(layer):
+    """Get multipart geometry as union of all geometries from a layer."""
+
+    feats = layer.getFeatures(QgsFeatureRequest())
+    for i, f in enumerate(feats):
+        if i == 0:
+            g = f.geometry()
+        else:
+            g = f.geometry().combine(g)
+
+    return g
+

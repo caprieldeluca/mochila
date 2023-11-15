@@ -112,9 +112,9 @@ def run(layer, k):
 def test():
     """Test the run function with a layer and k values"""
 
-    utf8_path = os.path.join(pkg_path,'vector','datos','puntos.gpkg')
+    utf8_path = os.path.join(pkg_path,'vector','data','points.gpkg')
 
-    baseName = 'puntos'
+    baseName = 'points'
 
     layer = layers.get_layer_from_gpkg(utf8_path, baseName)
 

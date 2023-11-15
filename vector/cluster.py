@@ -18,9 +18,9 @@ from qgis.core import (
 def test_cluster():
     """Test k-means clustering."""
 
-    utf8_path = os.path.join(pkg_path,'vector','datos','puntos.gpkg')
+    utf8_path = os.path.join(pkg_path,'vector','data','points.gpkg')
 
-    baseName = 'puntos'
+    baseName = 'points'
 
     layer = layers.get_layer_from_gpkg(utf8_path, baseName)
 
