@@ -25,6 +25,14 @@ def get_current_layer():
 
     return layer
 
+#=====
+# GET LAYER BY NAME
+#=====
+def get_layer_by_name(name):
+    """Get a layer of the project by its name."""
+    layer = QgsProject.instance().mapLayersByName(name)[0]
+
+    return layer
 
 #=====
 # GET LAYER FROM GPKG
