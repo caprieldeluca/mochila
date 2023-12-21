@@ -14,7 +14,7 @@ from qgis.core import (
 
 
 from mochila import plog
-from mochila.vector import layers
+from mochila.vector import vlayers
 
 
 #=====
@@ -52,7 +52,7 @@ def run(samples, results, attr_name):
     ref_crs = dissolved.crs()
 
     # Count all features
-    samples_count = layers.get_features_count(samples)
+    samples_count = vlayers.get_features_count(samples)
     plog("Cantidad total de muestras =", samples_count)
 
 
@@ -65,10 +65,10 @@ def run(samples, results, attr_name):
 
     # LYR1
     lyr1 = request_by_attribute(samples, attr_name, values[0])
-    lyr1_count = layers.get_features_count(lyr1)
+    lyr1_count = vlayers.get_features_count(lyr1)
 
     lyr1a = request_by_intersection(lyr1, ref_geom, ref_crs)
-    lyr1a_count = layers.get_features_count(lyr1a)
+    lyr1a_count = vlayers.get_features_count(lyr1a)
     lyr1b_count = lyr1_count - lyr1a_count
 
     msg = f'Cantidad total de muestras con "{attr_name}" = {values[0]}: '
@@ -80,10 +80,10 @@ def run(samples, results, attr_name):
 
     # LYR1
     lyr2 = request_by_attribute(samples, attr_name, values[1])
-    lyr2_count = layers.get_features_count(lyr2)
+    lyr2_count = vlayers.get_features_count(lyr2)
 
     lyr2a = request_by_intersection(lyr2, ref_geom, ref_crs)
-    lyr2a_count = layers.get_features_count(lyr2a)
+    lyr2a_count = vlayers.get_features_count(lyr2a)
     lyr2b_count = lyr2_count - lyr2a_count
 
     msg = f'Cantidad total de muestras con "{attr_name}" = {values[1]}: '
@@ -178,12 +178,12 @@ def test():
     # Get results layer
     utf8_path = str(PurePath(__file__).parent / 'data' / 'classification' / 'results.gpkg')
     baseName = 'results'
-    results = layers.get_layer_from_gpkg(utf8_path, baseName)
+    results = vlayers.get_layer_from_gpkg(utf8_path, baseName)
 
     # Get samples layer
     utf8_path = str(PurePath(__file__).parent / 'data' / 'classification' / 'samples.gpkg')
     baseName = 'samples'
-    samples = layers.get_layer_from_gpkg(utf8_path, baseName)
+    samples = vlayers.get_layer_from_gpkg(utf8_path, baseName)
 
     # Attribute name with classification
     attr_name = 'class'

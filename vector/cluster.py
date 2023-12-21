@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from mochila import plog, pkg_path
-from mochila.vector import layers
+from mochila.vector import vlayers
 
 import os
 
@@ -22,7 +22,7 @@ def test_cluster():
 
     baseName = 'points'
 
-    layer = layers.get_layer_from_gpkg(utf8_path, baseName)
+    layer = vlayers.get_layer_from_gpkg(utf8_path, baseName)
 
     # Number of clusters
     k = 5

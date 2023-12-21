@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from mochila import plog, pkg_path
 from mochila.vector import (
-    layers,
+    vlayers,
     cluster)
 
 import os
@@ -99,7 +99,7 @@ def run(layer, k):
 
     result_layer = results['sql']['OUTPUT']
 
-    layers.load_layer_to_map(
+    vlayers.load_layer_to_map(
         mapLayer=result_layer)
 
     plog("resluts =", results)
@@ -116,7 +116,7 @@ def test():
 
     baseName = 'points'
 
-    layer = layers.get_layer_from_gpkg(utf8_path, baseName)
+    layer = vlayers.get_layer_from_gpkg(utf8_path, baseName)
 
     k = 5
 
