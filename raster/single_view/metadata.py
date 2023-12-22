@@ -21,7 +21,7 @@ def get_tags(imagePath):
     return tags
 
 
-def get_mm(tags):
+def get_makermodel(tags):
     """Get Maker and Model from metadata tags."""
 
     maker = tags["Exif.Image.Make"]

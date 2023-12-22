@@ -32,17 +32,16 @@ def o2v_converter(rpy):
 
     r, p, y = np.radians(rpy)
 
-    Rx = rotation.create('x', r)
-    Ry = rotation.create('y', p)
-    Rz = rotation.create('z', y)
-
-    R = Rx @ Ry @ Rz
+    Rx = rotation.create_matrix('x', r)
+    Ry = rotation.create_matrix('y', p)
+    Rz = rotation.create_matrix('z', y)
+    R = Rz @ Ry @ Rx
 
     def converter(frd):
         """Transform Front, Right and Down coordinates from oblique camera
             to xyz coordinates of vertical system."""
 
-        xyz = np.dot(R.T, frd)
+        xyz = np.dot(R, frd)
 
         return xyz
 
@@ -64,5 +63,22 @@ def v2t_converter(alt):
         enu = np.array([h*y/z, h*x/z, 0])
 
         return enu
+
+    return converter
+
+
+def t2i_converter(xmin, ymax, gsd):
+    """Create a converter from topocentric to georeferenced image with given parameters."""
+
+    def converter(point):
+        """Transform a point (x, y) from topocentric to image (row, col) coordinates."""
+        x, y = point
+
+        row = (ymax - y) / gsd
+        column = (x - xmin) / gsd
+
+        rowcol = np.array([row, column])
+
+        return rowcol
 
     return converter
