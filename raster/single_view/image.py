@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from osgeo import gdal
+import numpy as np
+
+from mochila import plog
 
 
 def get_image_array(utf8_path):
@@ -14,7 +17,7 @@ def get_image_array(utf8_path):
 
     return array
 
-def create_reprojected_array(rows, cols, h_matrix, utf8_path):
+def create_reprojected_array(rows, cols, h_matrix, utf8_path, verbose):
     """Create an homography reprojected array from image in utf8_path.
     -----
     Params:
@@ -30,6 +33,11 @@ def create_reprojected_array(rows, cols, h_matrix, utf8_path):
     -----
     Returns:
         georef_image_array: ndarray
-            Array with (band, row, column) shape and 4 (rgba) bands.
+            Array with (bands, rows, columns) shape and 4 (rgba) bands.
     """
+
+    georef_image_array = np.zeros((4, rows, cols), dtype=np.uint8)
+    if verbose:
+        plog(f'{georef_image_array = }')
+
     pass

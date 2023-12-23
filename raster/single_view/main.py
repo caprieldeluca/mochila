@@ -5,6 +5,7 @@ from mochila.vector import vlayers
 from mochila.raster.single_view import (
     boundingbox,
     homography,
+    image,
     metadata,
     projs,
     transformations
@@ -170,8 +171,8 @@ def process(utf8_path,
     gsd = pixel_size * alt / focal_length
 
     # Compute row and columns for georeferenced image
-    georef_cols = np.ceil((xmax - xmin) / gsd)
-    georef_rows = np.ceil((ymax - ymin) / gsd)
+    georef_cols = int(np.ceil((xmax - xmin) / gsd))
+    georef_rows = int(np.ceil((ymax - ymin) / gsd))
 
     if verbose:
         plog(f'{gsd = }')
@@ -202,5 +203,13 @@ def process(utf8_path,
     h_matrix = homography.homography(georef_image_verts, orig_image_bounds)[0]
     if verbose:
         plog(f'{h_matrix = }')
+
+    image.create_reprojected_array(
+            georef_rows,
+            georef_cols,
+            h_matrix,
+            utf8_path,
+            verbose)
+
 
 
