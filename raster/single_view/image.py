@@ -6,13 +6,13 @@ import cv2 as cv
 import numpy as np
 
 
-def create(orig_image_bounds,
+def rectify(orig_image_bounds,
             georef_image_verts,
             rows,
             cols,
             utf8_path, *,
             verbose=True):
-    """Create an homography reprojected array from image in utf8_path.
+    """Create an homography rectified array from image in utf8_path.
     -----
     Params:
         rows:      int

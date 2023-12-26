@@ -4,7 +4,7 @@ from mochila import plog
 from mochila.vector import vlayers
 from mochila.raster.single_view import (
     boundingbox,
-    homography,
+    image,
     metadata,
     projs,
     transformations
@@ -61,7 +61,6 @@ def process(utf8_path,
             corrections=CORRECTIONS, *,
             gsd = 0.0,
             sensor_widths=SENSOR_WIDTHS,
-            with_opencv=True,
             verbose=True):
     """Process the georeference of a single-view perspective image.
     -----
@@ -84,10 +83,6 @@ def process(utf8_path,
                      in image metadata tags.
                 Example: {'DJI': {'FC7303': 6.3}}
                 Defaults to a dictionary of some makers and models already tested.
-        with_opencv:    bool (optional, keyword only)
-                Use OpenCV to transform the image. If false, a less efficient
-                 NumPy based solution is implemented.
-                Defaults to True.
         verbose:        bool (optional, keyword only)
                 Control if print some information or not.
                 Defaults to True.
@@ -215,27 +210,11 @@ def process(utf8_path,
         plog(f'{georef_image_verts = }')
 
     # Transform source to rectified array using homography
-    if with_opencv:
-        try:
-            from mochila.raster.single_view import image_with_opencv
-            georef_image = image_with_opencv.create(orig_image_bounds,
-                                                georef_image_verts,
-                                                georef_rows,
-                                                georef_cols,
-                                                utf8_path,
-                                                verbose=verbose)
-        except ImportError as e:
-            plog("'with_opencv' argument is True but OpenCV can't be imported.",
-                "Install OpenCV or call this function with 'with_opencv=False' keyword argument.")
-            raise e
-    else:
-        from mochila.raster.single_view import image_without_opencsv
-        georef_image = image_without_opencv.create(orig_image_bounds,
-                                                georef_image_verts,
-                                                georef_rows,
-                                                georef_cols,
-                                                utf8_path,
-                                                verbose=verbose)
-
+    georef_image = image.rectify(orig_image_bounds,
+                                georef_image_verts,
+                                georef_rows,
+                                georef_cols,
+                                utf8_path,
+                                verbose=verbose)
 
 
