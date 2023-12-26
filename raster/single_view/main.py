@@ -9,6 +9,7 @@ from mochila.raster.single_view import (
     projs,
     transformations
 )
+from mochila.utils import gdal_utils
 
 import numpy as np
 
@@ -164,6 +165,8 @@ def process(utf8_path,
     # Create a layer of points with the vertices of the image
     lat, lon = metadata.get_latlon(tags, maker, model)
     crs = f'PROJ:+proj=nsper +h={alt} +lat_0={lat} +lon_0={lon} +datum=WGS84 +type=crs'
+    if verbose:
+        plog(f'{crs = }')
     vlayers.create_layer_from_points(enu_verts, crs)
 
 
@@ -200,7 +203,9 @@ def process(utf8_path,
         plog(f'{bbox = }')
 
     # Define the geotransform matrix
-    geotrans = [xmin, 0, gsd, ymax, 0 -gsd]
+    geotrans = [xmin, 0, gsd, ymax, 0, -gsd]
+    if verbose:
+        plog(f'{geotrans = }')
 
     # Convert from topocentric (enu) to georeferenced image (col, row) coordinates
     t2i_conv = transformations.t2i_converter(xmin, ymax, gsd)
@@ -216,5 +221,11 @@ def process(utf8_path,
                                 georef_cols,
                                 utf8_path,
                                 verbose=verbose)
+
+    topocentric_ds = gdal_utils.array2ds(utf8_path[:-4]+'_rectified.TIF',
+                                        georef_image,
+                                        geotrans,
+                                        crs,
+                                        verbose=verbose)
 
 

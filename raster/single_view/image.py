@@ -36,10 +36,11 @@ def rectify(orig_image_bounds,
         plog(f'{h_matrix = }')
 
     img = cv.imread(utf8_path)
+    rgba = cv.cvtColor(img, cv.COLOR_RGB2RGBA)
     if verbose:
-        plog(f'{img.shape = }')
+        plog(f'{rgba.shape = }')
 
-    georef_image_array = cv.warpPerspective(img,
+    georef_image_array = cv.warpPerspective(rgba,
                                             h_matrix,
                                             [cols, rows])
 
@@ -48,5 +49,5 @@ def rectify(orig_image_bounds,
         plog(f'{type(georef_image_array) = }')
         plog(f'{georef_image_array.shape = }')
 
-    cv.imwrite(utf8_path[:-4]+'_rectified.JPG', georef_image_array)
+    cv.imwrite(utf8_path[:-4]+'_rectified.PNG', georef_image_array)
     return georef_image_array
