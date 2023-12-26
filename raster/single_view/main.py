@@ -5,7 +5,6 @@ from mochila.vector import vlayers
 from mochila.raster.single_view import (
     boundingbox,
     homography,
-    image,
     metadata,
     projs,
     transformations
@@ -60,7 +59,9 @@ def _verify_corrections(corrections):
 
 def process(utf8_path,
             corrections=CORRECTIONS, *,
+            gsd = 0.0,
             sensor_widths=SENSOR_WIDTHS,
+            with_opencv=True,
             verbose=True):
     """Process the georeference of a single-view perspective image.
     -----
@@ -73,13 +74,21 @@ def process(utf8_path,
                      and Yaw ('DELTA_YAW' key) in decimal degrees. Altitude is
                      in meters. All corrections are optional.
                 Defaults to all corrections to zero.
-        sensor_widths:  dict (optional)
+        gsd:            float
+                Force the rectification to this gsd, in meters.
+                If zero, it is computed from image metadata values.
+                Defaults to 0.0.
+        sensor_widths:  dict (optional, keyword only)
                 Dictionary with sensor maker, model and width (in millimeters).
                     The width value will be extracted using maker and model present
                      in image metadata tags.
                 Example: {'DJI': {'FC7303': 6.3}}
                 Defaults to a dictionary of some makers and models already tested.
-        verbose:        bool (optional)
+        with_opencv:    bool (optional, keyword only)
+                Use OpenCV to transform the image. If false, a less efficient
+                 NumPy based solution is implemented.
+                Defaults to True.
+        verbose:        bool (optional, keyword only)
                 Control if print some information or not.
                 Defaults to True.
     Return:
@@ -106,7 +115,8 @@ def process(utf8_path,
     pixel_size = sensor_width / cols # m/px
 
     focal_length = tags['Exif.Photo.FocalLength'] / 1000 # m
-    plog(f'{focal_length = }')
+    if verbose:
+        plog(f'{focal_length = }')
 
     if verbose:
         plog(f'{rows = }')
@@ -114,13 +124,16 @@ def process(utf8_path,
         plog(f'{pixel_size = } m/px')
 
 
-    # Define bounds in image coordinates
-    orig_image_bounds = [
-        [0, 0],
-        [rows, 0],
-        [rows, cols],
-        [0, cols]
-    ]
+    # Define bounds in image coordinates (center of top-left pixel is zero)
+    # x to cols, y to rows
+    orig_image_bounds = np.array([
+        [-0.5, -0.5],
+        [cols - 0.5, -0.5],
+        [cols - 0.5, rows - 0.5],
+        [-0.5, rows - 0.5]
+    ])
+    if verbose:
+        plog(f'{orig_image_bounds = }')
 
     # Convert from image (row, col) to oblique camera (front, right, down) coordinates
     i2o_conv = transformations.i2o_converter(rows, cols, pixel_size, focal_length)
@@ -159,16 +172,18 @@ def process(utf8_path,
     vlayers.create_layer_from_points(enu_verts, crs)
 
 
-    # Get the bounding box of the image rectified in topocentric coordinates
-    bbox = boundingbox.get_bbox(enu_verts)
+    # Get the approximate bounding box of the image rectified in topocentric coordinates
+    approx_bbox = boundingbox.get_bbox(enu_verts)
     if verbose:
-        plog(f'{bbox = }')
-    xmin, ymin, xmax, ymax = bbox
+        plog(f'{approx_bbox = }')
+    xmin, ymin, xmax, ymax = approx_bbox
     x_center = (xmin + xmax) / 2
     y_center = (ymin + ymax) / 2
 
-    # Get the pixel size as GSD if image were vertical.
-    gsd = pixel_size * alt / focal_length
+    # Compute GSD if needed
+    if gsd == 0.0:
+        # Get the pixel size as GSD if image were vertical.
+        gsd = pixel_size * alt / focal_length
 
     # Compute row and columns for georeferenced image
     georef_cols = int(np.ceil((xmax - xmin) / gsd))
@@ -192,24 +207,35 @@ def process(utf8_path,
     # Define the geotransform matrix
     geotrans = [xmin, 0, gsd, ymax, 0 -gsd]
 
-    # Convert from topocentric to (georeferenced) image (row, col) coordinates
+    # Convert from topocentric (enu) to georeferenced image (col, row) coordinates
     t2i_conv = transformations.t2i_converter(xmin, ymax, gsd)
-    georef_image_verts = [t2i_conv(point[0:2]) for point in enu_verts]
+    # Discard Up coordinate of topocentric points
+    georef_image_verts = np.array([t2i_conv(point[0:2]) for point in enu_verts])
     if verbose:
         plog(f'{georef_image_verts = }')
 
-
-    # Compute the homography matrix from georeferenced image (row, col) to original image (row, col) coordinates
-    h_matrix = homography.homography(georef_image_verts, orig_image_bounds)[0]
-    if verbose:
-        plog(f'{h_matrix = }')
-
-    image.create_reprojected_array(
-            georef_rows,
-            georef_cols,
-            h_matrix,
-            utf8_path,
-            verbose)
+    # Transform source to rectified array using homography
+    if with_opencv:
+        try:
+            from mochila.raster.single_view import image_with_opencv
+            georef_image = image_with_opencv.create(orig_image_bounds,
+                                                georef_image_verts,
+                                                georef_rows,
+                                                georef_cols,
+                                                utf8_path,
+                                                verbose=verbose)
+        except ImportError as e:
+            plog("'with_opencv' argument is True but OpenCV can't be imported.",
+                "Install OpenCV or call this function with 'with_opencv=False' keyword argument.")
+            raise e
+    else:
+        from mochila.raster.single_view import image_without_opencsv
+        georef_image = image_without_opencv.create(orig_image_bounds,
+                                                georef_image_verts,
+                                                georef_rows,
+                                                georef_cols,
+                                                utf8_path,
+                                                verbose=verbose)
 
 
 

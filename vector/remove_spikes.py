@@ -10,8 +10,7 @@ from qgis.core import (
     QgsProject,
     QgsVectorLayer)
 
-import numpy as np
-from mochila.mnumpy import nputils
+from mochila.utils import numpy_utils
 
 
 def run(geom, threshold):
@@ -25,7 +24,7 @@ def run(geom, threshold):
         curr_point = geom.vertexAt(i)
         next_point = geom.vertexAt(inext)
 
-        angle = nputils.get_angle_at_point(
+        angle = numpy_utils.get_angle_at_point(
                                         prev_point,
                                         curr_point,
                                         next_point)

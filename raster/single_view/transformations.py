@@ -6,14 +6,40 @@ import numpy as np
 
 
 def i2o_converter(rows, cols, pixel_size, focal_length):
-    """Create a converter from image to oblique camera coordinates with given parameters."""
+    """Create a converter from image to oblique camera coordinates with given parameters.
+    -----
+    Params:
+        rows:           int
+            Rows count of image.
+        cols:           int
+            Columns count of image
+        pixel_size:     float
+            Size of the pixel at sensor, in meters.
+        focal_lenght:   float
+            Focal lenght of sensor, in meters.
+    Returns:
+        converter:      callable
+            Function to convert from image to oblique camera coordinates
+    """
 
-    def converter(rowcol):
-        """Transform from image (row, col) to oblique camera ("front, right, down") coordinates."""
-        row, col = rowcol
+    def converter(colrow):
+        """Transform from image (col, row) to oblique camera ("front, right, down") coordinates.
+        -----
+        Params:
+            colrow:         list
+                List of column (float) and row (float) coordinates in image system
+                 to be converted to oblique camera coordinates.
+        -----
+        Returns:
+            frd             ndarray
+                Array with Front, Right and Down coordinates in the oblique
+                 camera system.
+        """
+        col, row = colrow
 
-        f = (- row + 0.5 * rows) * pixel_size
-        r = (col - 0.5 * cols) * pixel_size
+        # Unsimplified equations for better understanding
+        f = (- row + (rows/2 - 0.5)) * pixel_size
+        r = (col - (cols/2 - 0.5)) * pixel_size
         d = focal_length
 
         frd = np.array([f, r, d])
@@ -60,6 +86,7 @@ def v2t_converter(alt):
 
         x, y, z = xyz
 
+        # Up = 0 coordinate is preserved in case it is needed later
         enu = np.array([h*y/z, h*x/z, 0])
 
         return enu
@@ -68,17 +95,42 @@ def v2t_converter(alt):
 
 
 def t2i_converter(xmin, ymax, gsd):
-    """Create a converter from topocentric to georeferenced image with given parameters."""
+    """Create a converter from topocentric to georeferenced image with given parameters.
+    -----
+    Params:
+        xmin:           float
+            Coordinate of the West side, in meters.
+        ymax:           float
+            Coordinate of the North side, in meters.
+        gsd:            float
+            Size of the pixel of georeferenced image, in meters.
+    -----
+    Returns:
+        converter       callable
+            Function to convert from topocentric to georeferenced image
+             a pair of point coordinates.
+    """
 
     def converter(point):
-        """Transform a point (x, y) from topocentric to image (row, col) coordinates."""
+        """Transform a point (x, y) from topocentric to image (col, row) coordinates.
+        -----
+        Params:
+            point        list
+                List of East (float) and North (float) coordinates of a point.
+        -----
+        Returns:
+            colrow          ndarray
+                Array of column (float) and row (float) coordinates in
+                 the georeferenced image system.
+        """
         x, y = point
 
-        row = (ymax - y) / gsd
-        column = (x - xmin) / gsd
 
-        rowcol = np.array([row, column])
+        col = ((x - xmin) / gsd) - 0.5
+        row = ((ymax - y) / gsd) - 0.5
 
-        return rowcol
+        colrow = np.array([col, row])
+
+        return colrow
 
     return converter

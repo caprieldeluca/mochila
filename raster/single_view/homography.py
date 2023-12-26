@@ -1,11 +1,15 @@
 #!/usr/bin/python3
 
-# Taken from https://github.com/towardsautonomy/homography
+# Kudos to Shubham Shrivastava for this implementation
+# https://github.com/towardsautonomy/homography
 
 import numpy as np
 
-def homography(xy_src, xy_dst):
+def find(xy_src, xy_dst):
     '''
+    Compute homography transformation matrix from source to dest points.
+
+
     xy_src  : Nx2 Matrix corrsponding to source points
                 N is equal to the number of points
                 Each row contains [x, y]
@@ -54,7 +58,7 @@ def homography(xy_src, xy_dst):
 
     return H, H_inverse
 
-def applyHomography(xy, H):
+def apply(xy, H):
     '''
     xy      : 1x2 Matrix corresponding to the source point in the form [x1, y1]
     H       : Homography Matrix
