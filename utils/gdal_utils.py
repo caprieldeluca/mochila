@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-from datetime import datetime
 
 from mochila import plog
 
@@ -82,12 +81,14 @@ def warp_ds(utf8_path, ds, dst_crs, *, verbose=True):
                 Defaults to True.
     -----
     Returns:
-        None
+        dst_ds:         GDAL dataset
+                The warped dataset.
     """
 
     # Ensure the path exists
     dirname = os.path.dirname(utf8_path)
     if not os.path.exists(dirname):
+        plog(f"'{dirname}' directory does not exist and will be created.")
         os.makedirs(dirname)
 
     creation_options = ['COMPRESS=JPEG', 'PHOTOMETRIC=RGB']
@@ -103,8 +104,6 @@ def warp_ds(utf8_path, ds, dst_crs, *, verbose=True):
     dst_ds = gdal.Warp(utf8_path, ds, **warp_options)
     if verbose:
         plog(f'{utf8_path = }')
-        plog(f'{datetime.now() = }')
 
-    dst_ds = None
-    ds = None
+    return dst_ds
 

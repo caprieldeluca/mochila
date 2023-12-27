@@ -248,9 +248,12 @@ def process(src_utf8_path,
         plog(f'{dst_crs = }')
 
     # Reproject rectified image and save to disk
-    gdal_utils.warp_ds(dst_utf8_path,
-                    topocentric_ds,
-                    dst_crs,
-                    verbose=verbose)
+    warped_ds = gdal_utils.warp_ds(dst_utf8_path,
+                                topocentric_ds,
+                                dst_crs,
+                                verbose=verbose)
 
+    # Close datasets
+    warped_ds = None
+    topocentric_ds = None
 
