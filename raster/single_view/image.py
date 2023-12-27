@@ -49,5 +49,4 @@ def rectify(orig_image_bounds,
         plog(f'{type(georef_image_array) = }')
         plog(f'{georef_image_array.shape = }')
 
-    cv.imwrite(utf8_path[:-4]+'_rectified.PNG', georef_image_array)
     return georef_image_array

@@ -58,17 +58,26 @@ def _verify_corrections(corrections):
 
 
 
-def process(utf8_path,
-            corrections=CORRECTIONS, *,
-            gsd = 0.0,
+def process(src_utf8_path,
+            dst_utf8_path,
+            dst_crs=None, *,
+            corrections=CORRECTIONS,
+            gsd=0.0,
             sensor_widths=SENSOR_WIDTHS,
             verbose=True):
     """Process the georeference of a single-view perspective image.
     -----
     Parameters:
-        uft8_path:      str
-                Path to image file.
-        corrections:    dict (optional)
+        src_uft8_path:  str
+                Path to source image file.
+        dst_uft8_path:  str
+                Path to destination image file.
+        dst_crs:        str (optional)
+                Destination Spatial Reference System to project to the source dataset.
+                Any string accepted by OGRSpatialReference.SetFromUserInput().
+                If None, WGS84 / UTM zone will be computed from the image EXIF Geotags.
+                Dafaults to None.
+        corrections:    dict (optional, keyword only)
                 Dictionary with corrections for sensor angles values and altitude.
                     Sensor angles are Roll ('DELTA_ROLL' key), Pitch ('DELTA_PITCH' key)
                      and Yaw ('DELTA_YAW' key) in decimal degrees. Altitude is
@@ -94,7 +103,7 @@ def process(utf8_path,
 
     corrections = _verify_corrections(corrections)
 
-    tags = metadata.get_tags(utf8_path)
+    tags = metadata.get_tags(src_utf8_path)
 
     maker, model = metadata.get_makermodel(tags)
 
@@ -164,10 +173,11 @@ def process(utf8_path,
 
     # Create a layer of points with the vertices of the image
     lat, lon = metadata.get_latlon(tags, maker, model)
-    crs = f'PROJ:+proj=nsper +h={alt} +lat_0={lat} +lon_0={lon} +datum=WGS84 +type=crs'
+    # Define topocentric CRS in QgsCoordinateReferenceSystem().createFromString() format
+    topo_crs = f'PROJ:+proj=tmerc +lat_0={lat} +lon_0={lon} +datum=WGS84 +type=crs'
     if verbose:
-        plog(f'{crs = }')
-    vlayers.create_layer_from_points(enu_verts, crs)
+        plog(f'{topo_crs = }')
+    #vlayers.create_layer_from_points(enu_verts, topo_crs)
 
 
     # Get the approximate bounding box of the image rectified in topocentric coordinates
@@ -203,7 +213,7 @@ def process(utf8_path,
         plog(f'{bbox = }')
 
     # Define the geotransform matrix
-    geotrans = [xmin, 0, gsd, ymax, 0, -gsd]
+    geotrans = [xmin, gsd, 0, ymax, 0, -gsd]
     if verbose:
         plog(f'{geotrans = }')
 
@@ -215,17 +225,32 @@ def process(utf8_path,
         plog(f'{georef_image_verts = }')
 
     # Transform source to rectified array using homography
-    georef_image = image.rectify(orig_image_bounds,
+    georef_image_array = image.rectify(orig_image_bounds,
                                 georef_image_verts,
                                 georef_rows,
                                 georef_cols,
-                                utf8_path,
+                                src_utf8_path,
                                 verbose=verbose)
 
-    topocentric_ds = gdal_utils.array2ds(utf8_path[:-4]+'_rectified.TIF',
-                                        georef_image,
+    # Get a GeoTIFF driver dataset stored in memory with the rectified image
+    topocentric_ds = gdal_utils.array2ds(georef_image_array,
                                         geotrans,
-                                        crs,
+                                        topo_crs[5:], # PROJ: prefix is not used by osr
                                         verbose=verbose)
+
+
+    if not dst_crs:
+        # Get EPSG id of WGS84 / UTM Zone from EXIF Geotags
+        zone = int(np.floor(lon / 6) + 31)
+        hemisf = 326 if lat >= 0 else 327
+        dst_crs = "EPSG:" + str(hemisf) + str(zone)
+    if verbose:
+        plog(f'{dst_crs = }')
+
+    # Reproject rectified image and save to disk
+    gdal_utils.warp_ds(dst_utf8_path,
+                    topocentric_ds,
+                    dst_crs,
+                    verbose=verbose)
 
 
