@@ -9,4 +9,4 @@ __pycache__
 casco.py
 
 # Ignore custom test for singleview
-./raster/single_view/test.py
+raster/single_view/test.py
