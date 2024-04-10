@@ -7,3 +7,6 @@ __pycache__
 
 # Ignore custom casco.py file
 casco.py
+
+# Ignore custom test for singleview
+raster/single_view/test.py
