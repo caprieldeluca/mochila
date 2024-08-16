@@ -28,3 +28,21 @@ def get_angle_at_point(
     angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
     return angle
+
+def get_band_statistics(band_arr, nodata):
+    """Compute the median and percentiles 5 and 95 of a band array."""
+
+    # Mask and compress (flat and delete all nodata values) the band
+    flat_values = np.ma.masked_equal(band_arr, nodata).compressed()
+    # mean
+    mean = np.mean(flat_values)
+    # median
+    median = np.median(flat_values)
+    # Standard deviation
+    std = np.std(flat_values)
+    # Percentile 5
+    p5 = np.percentile(flat_values, 5)
+    # Percentile 95
+    p95 = np.percentile(flat_values, 95)
+
+    return mean, median, std, p5, p95
