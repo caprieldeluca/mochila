@@ -20,6 +20,7 @@ def get_image_array(utf8_path):
         raise Exception(f"Can't open {utf8_path} as a GDAL dataset.")
 
     array = ds.ReadAsArray()
+    ds = None
 
     return array
 
@@ -46,7 +47,8 @@ def array2ds(array, geotrans, crs, *, verbose=True):
 
     driver = gdal.GetDriverByName("MEM")
 
-    ysize, xsize, bands = array.shape
+    # array must come with shape (n_bands, n_rows, n_columns)
+    bands, ysize, xsize = array.shape
     ds = driver.Create("", xsize, ysize, bands, gdal.GDT_Byte)
 
     ds.SetGeoTransform(geotrans)
@@ -57,7 +59,8 @@ def array2ds(array, geotrans, crs, *, verbose=True):
     wkt = spat_ref.ExportToWkt()
     ds.SetProjection(wkt)
 
-    ds.WriteArray(np.moveaxis(array, -1, 0))
+    # Write the array to the dataset
+    ds.WriteArray(array)
 
     if verbose:
         plog(f'{ds.ReadAsArray().shape = }')
