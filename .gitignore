@@ -1,12 +1,8 @@
-
-# Ignore all .geany files
-*.geany
-
 # Ignore all __pycache__ directories
 __pycache__
 
 # Ignore custom casco.py file
 casco.py
 
-# Ignore custom test for singleview
-raster/single_view/mitest.py
+# Ignore private directory
+private/
