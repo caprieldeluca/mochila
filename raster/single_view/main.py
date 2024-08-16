@@ -232,8 +232,20 @@ def process(src_utf8_path,
                                 src_utf8_path,
                                 verbose=verbose)
 
+    # The georef_image_array comes with shape (rows, columns, bands)
+    # We need it as (bands, rows, columns) to write the dataset
+    bands_first = np.moveaxis(georef_image_array, -1, 0)
+
+    # For some reason (TODO: investigate) the bands comes as brga
+    # bands_first: [blue, red, green, alpha]
+    # Convert to rgba:
+    rgba_array = np.array([bands_first[2], bands_first[1], bands_first[0], bands_first[3]])
+
+    if verbose:
+        plog(f'{rgba_array.shape = }')
+
     # Get a GeoTIFF driver dataset stored in memory with the rectified image
-    topocentric_ds = gdal_utils.array2ds(georef_image_array,
+    topocentric_ds = gdal_utils.array2ds(rgba_array,
                                         geotrans,
                                         topo_crs[5:], # PROJ: prefix is not used by osr
                                         verbose=verbose)
