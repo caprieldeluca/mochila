@@ -3,10 +3,10 @@ _pyqgis_ personal toolbox. Run inside QGIS through [puentes plugin](https://gith
 
 -----
 - Clone this repository.
-
-- Configure _puentes_ plugin to run `mosqueton.py` file.
-
-- Write the code you want to run in `casco.py` file.
+- Write the code you want to run in a `casco.py` file.
+- Set a `CASCO` environment variable with the absolute path to your `casco.py` file (if not, the default `casco.py` file of the *mochila's* package will be run).
+- Start *QGIS* and configure _puentes_ plugin to run the *mochila's* `mosqueton.py` file.
+- Run *puentes*.
 
 All modules will be accesible as a package. For instance:
 
