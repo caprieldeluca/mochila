@@ -32,6 +32,7 @@ def compute_statistics(src_path, n_band):
     with rasterio.open(src_path) as src:
         # Dictionary with {band_n: (data_type, nodata_value)} elements
         props = {prop[0]: prop[1] for prop in zip(src.indexes, src.nodatavals)}
+        
         arr_band = src.read(n_band)
 
     nodata = props[n_band]
@@ -45,7 +46,7 @@ def compute_statistics(src_path, n_band):
     )
     return stats
 
-def standarize(src_path, n_band, dst_path, dst_dtype, dst_nodata, t, s):
+def standarize(src_path, n_band, dst_path, dst_dtype, dst_nodata, t, s, **extra_kwargs):
     """standarize a band and write it to disk.
 
     Parameters:
@@ -56,13 +57,14 @@ def standarize(src_path, n_band, dst_path, dst_dtype, dst_nodata, t, s):
         dst_nodata: Int or Float. Destination nodata value.
         t:          Float. Translation.
         s:          Float. Scale.
+        **extra_kwargs: Additional GDAL Creation Options.
 
     Returns:
         Dict. Stats (mean, median, std, p5, p95) of raster band.
     """
     with rasterio.open(src_path) as src:
         arr_band = src.read(n_band)
-        kwargs = src.meta
+        kwargs = src.meta.copy()
         # Dictionary with {band_n: (data_type, nodata_value)} elements
         props = {prop[0]: prop[1] for prop in zip(src.indexes, src.nodatavals)}
 
@@ -79,12 +81,18 @@ def standarize(src_path, n_band, dst_path, dst_dtype, dst_nodata, t, s):
         (arr + t) * s
     )
     # Clip to the min and max values of the dtype (only for integer types)
-    np.clip(standarized, np.iinfo(dst_dtype).min, np.iinfo(dst_dtype).max, standarized)
+    if np.issubdtype(dst_dtype, np.integer):
+        np.clip(standarized, np.iinfo(dst_dtype).min, np.iinfo(dst_dtype).max, standarized)
 
-    # Set metadata datatype as Float32, one band, and nodata value
-    kwargs['dtype'] = dst_dtype
-    kwargs['count'] = 1
-    kwargs['nodata'] = dst_nodata
+    # Set metadata datatype, count of bands (always 1), and nodata value
+    kwargs.update({
+        'dtype': dst_dtype,
+        'count': 1,
+        'nodata': dst_nodata
+    })
+    
+    # Include extra kwargs
+    kwargs.update(extra_kwargs)
 
     # Create the file.
     plog(f'(normalize) Writing: {dst_path}.')
